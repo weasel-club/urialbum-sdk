@@ -1,0 +1,12 @@
+{
+  "name": "com.urialbum.sdk",
+  "displayName": "UriAlbum SDK",
+  "version": "1.0.0",
+  "unity": "2022.3",
+  "description": "UriAlbum SDK",
+  "author": {
+    "name": "WeaselClub",
+    "url": "https://github.com/weasel-club"
+  },
+  "dependencies": {}
+}
