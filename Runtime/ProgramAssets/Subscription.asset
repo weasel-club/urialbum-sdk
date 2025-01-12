@@ -20,7 +20,7 @@ MonoBehaviour:
   compiledVersion: 2
   behaviourSyncMode: 0
   hasInteractEvent: 0
-  scriptID: -1575138370218136477
+  scriptID: -3843105633199082932
   serializationData:
     SerializedFormat: 2
     SerializedBytes: 
@@ -121,7 +121,7 @@ MonoBehaviour:
       Data: 7|System.RuntimeType, mscorlib
     - Name: 
       Entry: 1
-      Data: UriAlbum.Core.Image, Assembly-CSharp
+      Data: UriAlbum.Runtime.Core.Image, UriAlbum.Runtime
     - Name: 
       Entry: 8
       Data: 

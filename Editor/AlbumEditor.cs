@@ -55,13 +55,18 @@ namespace UriAlbum.Editor
         {
             album.ResetPrepared();
 
+            var groupIdProperty = serializedObject.FindProperty("_groupId");
+            var albumNameProperty = serializedObject.FindProperty("_albumName");
             var metadataUrlProperty = serializedObject.FindProperty("_metadataUrl");
             var potatoUrlProperty = serializedObject.FindProperty("_potatoUrl");
             var atlasUrlsProperty = serializedObject.FindProperty("_atlasUrls");
             var prefabsProperty = serializedObject.FindProperty("_prefabs");
             var isSetProperty = serializedObject.FindProperty("_isSet");
 
-            var albumBaseUrl = $"{APIUrl}/groups/{album._groupId}/albums/{album._albumName}";
+            groupIdProperty.stringValue = groupIdProperty.stringValue.Trim();
+            albumNameProperty.stringValue = albumNameProperty.stringValue.Trim();
+
+            var albumBaseUrl = $"{APIUrl}/groups/{album.GroupId}/albums/{album.AlbumName}";
 
             metadataUrlProperty.FindPropertyRelative("url").stringValue = albumBaseUrl;
             potatoUrlProperty.FindPropertyRelative("url").stringValue = $"{albumBaseUrl}/potato";
@@ -91,8 +96,11 @@ namespace UriAlbum.Editor
 
             if (album.IsSet) EditorGUI.BeginDisabledGroup(true);
 
-            album._groupId = EditorGUILayout.TextField("Group ID", album._groupId);
-            album._albumName = EditorGUILayout.TextField("Album Name", album._albumName);
+            var groupIdProperty = serializedObject.FindProperty("_groupId");
+            var albumNameProperty = serializedObject.FindProperty("_albumName");
+
+            EditorGUILayout.PropertyField(groupIdProperty, new GUIContent("Group ID"));
+            EditorGUILayout.PropertyField(albumNameProperty, new GUIContent("Album Name"));
 
             EditorGUILayout.Space();
 

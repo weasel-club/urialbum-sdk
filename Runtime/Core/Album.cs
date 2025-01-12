@@ -11,8 +11,11 @@ namespace UriAlbum.Runtime.Core
     public class Album : UdonSharpBehaviour
     {
         // User provided options
-        public string _groupId;
-        public string _albumName;
+        [SerializeField]private string _groupId;
+        [SerializeField] private string _albumName;
+
+        public string GroupId => _groupId;
+        public string AlbumName => _albumName;
 
         // Compile time serialized values
         [SerializeField] private bool _isSet;
