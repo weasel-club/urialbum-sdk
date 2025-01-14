@@ -9,16 +9,6 @@ namespace UriAlbum.Editor
     [CustomEditor(typeof(ImageDisplay))]
     public class ImageDisplayEditor : UnityEditor.Editor
     {
-        private void OnEnable()
-        {
-            EditorApplication.hierarchyChanged += EditorUtil.UpdateAlbumsInScene;
-        }
-
-        private void OnDisable()
-        {
-            EditorApplication.hierarchyChanged -= EditorUtil.UpdateAlbumsInScene;
-        }
-
         public override void OnInspectorGUI()
         {
             EditorUtil.DrawHeader();

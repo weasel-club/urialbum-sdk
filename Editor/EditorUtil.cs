@@ -12,6 +12,11 @@ namespace UriAlbum.Editor
         private const string DashboardURL = "https://urialbum.com";
         private static List<Album> AlbumsInScene { get; set; }
 
+        static EditorUtil()
+        {
+            EditorApplication.hierarchyChanged += UpdateAlbumsInScene;
+        }
+
         public static void UpdateAlbumsInScene()
         {
             if (EditorApplication.isPlaying)
@@ -28,6 +33,13 @@ namespace UriAlbum.Editor
             if (AlbumsInScene == null) UpdateAlbumsInScene();
             var albums = AlbumsInScene;
             if (albums == null) return null;
+
+            if (albums.Count == 0)
+            {
+                EditorGUILayout.HelpBox("No albums found in scene.", MessageType.Warning);
+                return null;
+            }
+
             var albumNames = new string[albums.Count];
             for (var i = 0; i < albums.Count; i++)
             {
