@@ -11,6 +11,7 @@ namespace UriAlbum.Editor
     {
         private const int PreparedAtlasUrls = 512;
         private const string APIUrl = "https://api.urialbum.com";
+        private const string APIVersion = "v0";
 
         private static GameObject CreateObject(string objectName, GameObject parent)
         {
@@ -66,7 +67,7 @@ namespace UriAlbum.Editor
             groupIdProperty.stringValue = groupIdProperty.stringValue.Trim();
             albumNameProperty.stringValue = albumNameProperty.stringValue.Trim();
 
-            var albumBaseUrl = $"{APIUrl}/groups/{album.GroupId}/albums/{album.AlbumName}";
+            var albumBaseUrl = $"{APIUrl}/{APIVersion}/groups/{album.GroupId}/albums/{album.AlbumName}";
 
             metadataUrlProperty.FindPropertyRelative("url").stringValue = albumBaseUrl;
             potatoUrlProperty.FindPropertyRelative("url").stringValue = $"{albumBaseUrl}/potato";
