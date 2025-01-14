@@ -9,7 +9,7 @@ namespace UriAlbum.Editor
     [CustomEditor(typeof(Album))]
     public class AlbumEditor : UnityEditor.Editor
     {
-        private const int PreparedAtlasUrls = 16;
+        private const int PreparedAtlasUrls = 512;
         private const string APIUrl = "https://api.urialbum.com";
 
         private static GameObject CreateObject(string objectName, GameObject parent)
