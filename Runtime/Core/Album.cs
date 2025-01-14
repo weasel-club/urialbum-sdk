@@ -1,5 +1,7 @@
+using System;
 using UdonSharp;
 using UnityEngine;
+using VRC.Core;
 using VRC.SDK3.Data;
 using VRC.SDK3.StringLoading;
 using VRC.SDKBase;
@@ -11,7 +13,7 @@ namespace UriAlbum.Runtime.Core
     public class Album : UdonSharpBehaviour
     {
         // User provided options
-        [SerializeField]private string _groupId;
+        [SerializeField] private string _groupId;
         [SerializeField] private string _albumName;
 
         public string GroupId => _groupId;
@@ -24,9 +26,6 @@ namespace UriAlbum.Runtime.Core
         [SerializeField] private VRCUrl _potatoUrl;
 
         public bool IsSet => _isSet;
-        public VRCUrl MetadataUrl => _metadataUrl;
-        public VRCUrl[] AtlasUrls => _atlasUrls;
-        public VRCUrl PotatoUrl => _potatoUrl;
 
         [SerializeField] private Prefabs _prefabs;
         public Prefabs Prefabs => _prefabs;
@@ -41,6 +40,8 @@ namespace UriAlbum.Runtime.Core
         private readonly DataDictionary tagSubscriptions = new DataDictionary(); // Tag -> ImageSubscription
         private readonly DataList nonTagSubscriptions = new DataList();
         private readonly DataDictionary linkedSubscriptions = new DataDictionary(); // ID -> ImageSubscription
+
+        private readonly DataList atlasLoadQueue = new DataList();
 
         public Subscription SubscribeTagImage(UdonSharpBehaviour target, string tag)
         {
@@ -77,6 +78,7 @@ namespace UriAlbum.Runtime.Core
             CreateAtlases();
             CreatePotato();
             LinkSubscriptions();
+            InitializeAtlasLoadQueue();
 
             _potato.Load(_potatoUrl);
         }
@@ -117,8 +119,6 @@ namespace UriAlbum.Runtime.Core
                 var sx = atlasIndex % n * size;
                 var sy = (int) ((float) atlasIndex / n) * size;
 
-                Debug.Log($"sx: {sx}, sy: {sy}, size: {size}, scale: {scale}");
-
                 foreach (var image in atlas.Images)
                 {
                     var potatoImageMetadataObject = Instantiate(Prefabs.MetadataImage.gameObject, transform);
@@ -138,29 +138,36 @@ namespace UriAlbum.Runtime.Core
             _potato = Atlas.Create(this, potatoMetadata);
         }
 
-        private void LoadAtlas(int index)
+        private void LoadNextAtlas()
         {
-            if (index >= _atlases.Length || index >= _atlasUrls.Length) return;
+            if (atlasLoadQueue.Count == 0) return;
+            var index = atlasLoadQueue[0].Int;
             _atlases[index].Load(_atlasUrls[index]);
+            atlasLoadQueue.RemoveAt(0);
         }
 
-        private int GetAtlasIndex(Atlas atlas)
+        public void PrioritizeAtlas(Atlas atlas)
         {
-            for (var i = 0; i < _atlases.Length; i++)
-                if (_atlases[i] == atlas)
-                    return i;
-            return -1;
+            // If already loaded, do nothing
+            if (atlas.Loaded) return;
+
+            // Find index of atlas in queue
+            var index = Array.IndexOf(_atlases, atlas);
+            if (index == -1) return;
+
+            // If already first in queue, do nothing
+            if (atlasLoadQueue.Count > 0 && atlasLoadQueue[0].Int == index) return;
+
+            // Move to front of queue
+            if (atlasLoadQueue.Remove(index))
+            {
+                atlasLoadQueue.Insert(0, index);
+            }
         }
 
         public void OnAtlasLoaded(Atlas atlas)
         {
-            // Load next atlas
-            if (atlas == _potato) LoadAtlas(0);
-            else
-            {
-                var index = GetAtlasIndex(atlas);
-                if (index >= 0) LoadAtlas(index + 1);
-            }
+            LoadNextAtlas();
 
             // Notify subscriptions
             foreach (var image in atlas.Images)
@@ -193,20 +200,46 @@ namespace UriAlbum.Runtime.Core
                     if (image.Metadata.Tag == tag)
                     {
                         linkedSubscriptions[image.Metadata.ID] = subscription;
-                        images.RemoveAt(j);
+                        subscription.OriginalAtlas = image.Atlas;
                         break;
                     }
                 }
             }
 
             // Link other images
-            for (var i = 0; i < images.Count; i++)
+            while (images.Count > 0 && nonTagSubscriptions.Count > 0)
             {
-                if (i >= nonTagSubscriptions.Count) break;
+                var image = (Image) images[0].Reference;
+                images.RemoveAt(0);
+                if (IsImageSubscribed(image)) continue;
 
-                var image = (Image) images[i].Reference;
-                var subscription = (Subscription) nonTagSubscriptions[i].Reference;
+                var subscription = (Subscription) nonTagSubscriptions[0].Reference;
+                nonTagSubscriptions.RemoveAt(0);
                 linkedSubscriptions[image.Metadata.ID] = subscription;
+                subscription.OriginalAtlas = image.Atlas;
+            }
+        }
+
+        private bool IsImageSubscribed(Image image)
+        {
+            return linkedSubscriptions.ContainsKey(image.Metadata.ID);
+        }
+
+        private bool IsAtlasSubscribed(Atlas atlas)
+        {
+            foreach (var image in atlas.Images)
+                if (IsImageSubscribed(image))
+                    return true;
+
+            return false;
+        }
+
+        private void InitializeAtlasLoadQueue()
+        {
+            for (var i = 0; i < _atlases.Length; i++)
+            {
+                var atlas = _atlases[i];
+                if (IsAtlasSubscribed(atlas)) atlasLoadQueue.Add(i);
             }
         }
 

@@ -20,6 +20,11 @@ namespace UriAlbum.Runtime.Core
         public Image[] Images => _images;
         public Metadata.Atlas Metadata => _metadata;
 
+        private bool _prioritized;
+        public bool Prioritized => _prioritized;
+
+        public bool Loaded => Texture != null;
+
         public static Atlas Create(Album album, Metadata.Atlas metadata)
         {
             var atlasObject = Instantiate(album.Prefabs.Atlas.gameObject, album.transform);
@@ -46,6 +51,14 @@ namespace UriAlbum.Runtime.Core
         {
             _downloader = new VRCImageDownloader();
             _downloader.DownloadImage(url, null, (IUdonEventReceiver) this);
+        }
+
+        public void Prioritize()
+        {
+            if (_prioritized) return;
+            _prioritized = true;
+            _album.PrioritizeAtlas(this);
+            Debug.Log($"Prioritized atlas {this}");
         }
     }
 }

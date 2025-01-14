@@ -1,6 +1,8 @@
+using System;
 using UdonSharp;
 using UnityEngine;
 using UriAlbum.Runtime.Core;
+using VRC.SDKBase;
 
 namespace UriAlbum.Runtime.Display
 {
@@ -19,12 +21,11 @@ namespace UriAlbum.Runtime.Display
         {
             _renderer = GetComponent<Renderer>();
             _renderer.material.color = Color.clear;
-
             if (_useTag) _subscription = _album.SubscribeTagImage(this, _tag);
             else _subscription = _album.SubscribeImage(this);
         }
 
-        public void Apply(Image image)
+        private void Apply(Image image)
         {
             var material = _renderer.material;
             var texture = image.Atlas.Texture;
@@ -43,6 +44,16 @@ namespace UriAlbum.Runtime.Display
         {
             var image = _subscription.Image;
             Apply(image);
+        }
+
+        private void Update()
+        {
+            if (!_subscription.Linked) return;
+            if (_subscription.OriginalAtlas.Loaded || _subscription.OriginalAtlas.Prioritized) return;
+            var player = Networking.LocalPlayer;
+            var distance = Vector3.Distance(player.GetPosition(), transform.position);
+            if (distance >= 5f) return;
+            _subscription.OriginalAtlas.Prioritize();
         }
     }
 }
