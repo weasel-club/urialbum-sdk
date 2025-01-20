@@ -58,7 +58,6 @@ namespace UriAlbum.Runtime.Core
             if (_prioritized) return;
             _prioritized = true;
             _album.PrioritizeAtlas(this);
-            Debug.Log($"Prioritized atlas {this}");
         }
     }
 }

@@ -37,23 +37,27 @@ namespace UriAlbum.Runtime.Core
         private Atlas[] _atlases;
         private Image[] _images;
 
-        private readonly DataDictionary tagSubscriptions = new DataDictionary(); // Tag -> ImageSubscription
+        private readonly DataDictionary tagSubscriptions = new DataDictionary(); // Tag -> DataList<ImageSubscription>
         private readonly DataList nonTagSubscriptions = new DataList();
         private readonly DataDictionary linkedSubscriptions = new DataDictionary(); // ID -> ImageSubscription
 
         private readonly DataList atlasLoadQueue = new DataList();
 
-        public Subscription SubscribeTagImage(UdonSharpBehaviour target, string tag)
+        public Subscription SubscribeImage(UdonSharpBehaviour target, string tag = null)
         {
             var subscription = Subscription.Create(this, target);
-            tagSubscriptions[tag] = subscription;
-            return subscription;
-        }
 
-        public Subscription SubscribeImage(UdonSharpBehaviour target)
-        {
-            var subscription = Subscription.Create(this, target);
-            nonTagSubscriptions.Add(subscription);
+            if (tag != null)
+            {
+                var list = tagSubscriptions.ContainsKey(tag) ? tagSubscriptions[tag].DataList : new DataList();
+                list.Add(subscription);
+                tagSubscriptions[tag] = list;
+            }
+            else
+            {
+                nonTagSubscriptions.Add(subscription);
+            }
+
             return subscription;
         }
 
@@ -180,6 +184,28 @@ namespace UriAlbum.Runtime.Core
             }
         }
 
+        private static int FindImageWithTag(DataList images, string tag)
+        {
+            for (var i = 0; i < images.Count; i++)
+            {
+                var image = (Image) images[i].Reference;
+                if (image.Metadata.Tag == tag) return i;
+            }
+
+            return -1;
+        }
+
+        private static void ShuffleDataList(DataList list)
+        {
+            for (var i = list.Count - 1; i > 0; i--)
+            {
+                var j = UnityEngine.Random.Range(0, i + 1);
+                var temp = list[i];
+                list[i] = list[j];
+                list[j] = temp;
+            }
+        }
+
         private void LinkSubscriptions()
         {
             var images = new DataList();
@@ -187,22 +213,26 @@ namespace UriAlbum.Runtime.Core
             foreach (var image in atlas.Images)
                 images.Add(image);
 
+            ShuffleDataList(images);
+
             // Link tagged images
             var tags = tagSubscriptions.GetKeys();
             for (var i = 0; i < tags.Count; i++)
             {
-                var tag = tags[i];
-                var subscription = (Subscription) tagSubscriptions[tag].Reference;
+                var tag = tags[i].String;
+                var subscriptions = tagSubscriptions[tag].DataList;
 
-                for (var j = 0; j < images.Count; j++)
+                for (var j = 0; j < subscriptions.Count; j++)
                 {
-                    var image = (Image) images[j].Reference;
-                    if (image.Metadata.Tag == tag)
-                    {
-                        linkedSubscriptions[image.Metadata.ID] = subscription;
-                        subscription.OriginalAtlas = image.Atlas;
-                        break;
-                    }
+                    var subscription = (Subscription) subscriptions[j].Reference;
+
+                    // Find image with tag
+                    var imageIndex = FindImageWithTag(images, tag);
+                    if (imageIndex == -1) break;
+                    var image = (Image) images[imageIndex].Reference;
+                    images.RemoveAt(imageIndex);
+
+                    LinkImageSubscription(subscription, image);
                 }
             }
 
@@ -210,14 +240,17 @@ namespace UriAlbum.Runtime.Core
             while (images.Count > 0 && nonTagSubscriptions.Count > 0)
             {
                 var image = (Image) images[0].Reference;
-                images.RemoveAt(0);
-                if (IsImageSubscribed(image)) continue;
-
                 var subscription = (Subscription) nonTagSubscriptions[0].Reference;
+                LinkImageSubscription(subscription, image);
+                images.RemoveAt(0);
                 nonTagSubscriptions.RemoveAt(0);
-                linkedSubscriptions[image.Metadata.ID] = subscription;
-                subscription.OriginalAtlas = image.Atlas;
             }
+        }
+
+        private void LinkImageSubscription(Subscription subscription, Image image)
+        {
+            linkedSubscriptions[image.Metadata.ID] = subscription;
+            subscription.OriginalAtlas = image.Atlas;
         }
 
         private bool IsImageSubscribed(Image image)

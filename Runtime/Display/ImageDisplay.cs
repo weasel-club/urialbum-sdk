@@ -10,9 +10,13 @@ namespace UriAlbum.Runtime.Display
     [RequireComponent(typeof(Renderer))]
     public class ImageDisplay : UdonSharpBehaviour
     {
+        // User provided options
         public Album _album;
         public bool _useTag;
         public string _tag;
+
+        // Editor defined options
+        public int _order;
 
         private Subscription _subscription;
         private Renderer _renderer;
@@ -21,7 +25,7 @@ namespace UriAlbum.Runtime.Display
         {
             _renderer = GetComponent<Renderer>();
             _renderer.material.color = Color.clear;
-            if (_useTag) _subscription = _album.SubscribeTagImage(this, _tag);
+            if (_useTag) _subscription = _album.SubscribeImage(this, _tag);
             else _subscription = _album.SubscribeImage(this);
         }
 

@@ -1,9 +1,12 @@
 ﻿#if UNITY_EDITOR
 
 using System.Collections.Generic;
+using System.Linq;
+using UdonSharp;
 using UnityEditor;
 using UnityEngine;
 using UriAlbum.Runtime.Core;
+using UriAlbum.Runtime.Display;
 
 namespace UriAlbum.Editor
 {
@@ -14,7 +17,13 @@ namespace UriAlbum.Editor
 
         static EditorUtil()
         {
-            EditorApplication.hierarchyChanged += UpdateAlbumsInScene;
+            EditorApplication.hierarchyChanged += OnHierarchyChanged;
+        }
+
+        private static void OnHierarchyChanged()
+        {
+            UpdateAlbumsInScene();
+            UpdateImageDisplayOrders();
         }
 
         public static void UpdateAlbumsInScene()
@@ -26,6 +35,36 @@ namespace UriAlbum.Editor
             }
 
             AlbumsInScene = new List<Album>(Object.FindObjectsOfType<Album>());
+        }
+
+        private static T[] SortByHierarchyOrder<T>(T[] objects) where T: Component
+        {
+            return objects.OrderBy(GetHierarchyPath).ToArray();
+        }
+
+        private static string GetHierarchyPath<T >(T obj) where T: Component
+        {
+            var path = new List<string>();
+            var current = obj.transform;
+            
+            while (current != null)
+            {
+                // GetSiblingIndex를 사용해 같은 레벨에서의 순서 유지
+                path.Insert(0, current.GetSiblingIndex().ToString("D10"));
+                current = current.parent;
+            }
+            
+            return string.Join("/", path);
+        }
+
+        private static void UpdateImageDisplayOrders() {
+            var imageDisplays = Object.FindObjectsOfType<ImageDisplay>();
+            var sortedDisplays = SortByHierarchyOrder(imageDisplays);
+            for (var i = 0; i < sortedDisplays.Length; i++)
+            {
+                var display = sortedDisplays[i];
+                display._order = i;
+            }
         }
 
         public static Album AlbumSelector(string label, Album currentAlbum)
