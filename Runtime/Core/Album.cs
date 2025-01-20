@@ -43,6 +43,10 @@ namespace UriAlbum.Runtime.Core
 
         private readonly DataList atlasLoadQueue = new DataList();
 
+        private bool loadStarted;
+        private float waitSeedTime;
+        public int _seed;
+
         public Subscription SubscribeImage(UdonSharpBehaviour target, string tag = null)
         {
             var subscription = Subscription.Create(this, target);
@@ -63,7 +67,22 @@ namespace UriAlbum.Runtime.Core
 
         private void Start()
         {
+            if (Networking.IsMaster) _seed = UnityEngine.Random.Range(0, int.MaxValue);
+        }
+
+        private void Update()
+        {
             if (!IsSet) return;
+            if (loadStarted) return;
+
+            // If seed is not synced yet, wait for it\
+            if (_seed == 0) return;
+
+            // Seeding for instance deterministic shuffle
+            UnityEngine.Random.InitState(_seed);
+
+            // Start load
+            loadStarted = true;
             LoadMetadata();
         }
 
