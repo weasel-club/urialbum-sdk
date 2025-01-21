@@ -1,0 +1,47 @@
+name: Create Beta Release
+on:
+  push:
+    tags:
+      - "[0-9]+.[0-9]+.[0-9]+-beta"
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set values in package.json
+        run: |
+          VERSION=$(echo "${{ github.ref_name }}" | sed 's/-beta$//')
+          echo "Updating package.json version to $VERSION"
+          jq --arg version "$VERSION" --arg display "UriAlbum SDK Beta" '
+            .version = $version | 
+            .name = "com.urialbum.sdk.beta" |
+            .displayName = $display |
+            .description = $display
+          ' package.json > package.json.tmp
+          mv package.json.tmp package.json
+
+      - name: Make zip
+        run: |
+          mkdir output
+          zip -r output/release.zip . -x .git/\* -x .github/\* -x output/\*
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./output/release.zip
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          name: UriAlbumSDK-${{ github.ref_name }}.zip
+          repository: weasel-club/urialbum-sdk-beta
+
+      - name: Trigger packages workflow
+        uses: convictional/trigger-workflow-and-wait@v1.6.1
+        with:
+          owner: weasel-club
+          repo: packages
+          github_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          workflow_file_name: build-listing.yml
+          ref: main
+          trigger_workflow: true
+          wait_workflow: true

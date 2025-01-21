@@ -1,4 +1,4 @@
-name: Create Release
+name: Create Main Release
 on:
   push:
     tags:
@@ -12,8 +12,9 @@ jobs:
 
       - name: Set tag as version in package.json
         run: |
-          echo "Updating package.json version to ${{ github.ref_name }}"
-          jq '.version = "${{ github.ref_name }}"' package.json > package.json.tmp
+          VERSION=$(echo "${{ github.ref_name }}")
+          echo "Updating package.json version to $VERSION"
+          jq --arg version "$VERSION" '.version = $version' package.json > package.json.tmp
           cp package.json.tmp package.json
 
       - name: Make zip
