@@ -10,6 +10,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Set tag as version in package.json
+        run: |
+          echo "Updating package.json version to ${{ github.ref_name }}"
+          jq '.version = "${{ github.ref_name }}"' package.json > package.json.tmp
+          cp package.json.tmp package.json
+
       - name: Make zip
         run: |
           mkdir output
