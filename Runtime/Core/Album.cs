@@ -9,6 +9,7 @@ using VRC.Udon.Common.Interfaces;
 
 namespace UriAlbum.Runtime.Core
 {
+    [UdonBehaviourSyncMode(BehaviourSyncMode.Continuous)]
     [AddComponentMenu("UriAlbum/Album")]
     public class Album : UdonSharpBehaviour
     {
@@ -45,7 +46,8 @@ namespace UriAlbum.Runtime.Core
 
         private bool loadStarted;
         private float waitSeedTime;
-        public int _seed;
+
+        [UdonSynced] private int seed = -1;
 
         public Subscription SubscribeImage(UdonSharpBehaviour target, string tag = null)
         {
@@ -67,7 +69,7 @@ namespace UriAlbum.Runtime.Core
 
         private void Start()
         {
-            if (Networking.IsMaster) _seed = UnityEngine.Random.Range(0, int.MaxValue);
+            if (Networking.IsMaster) seed = UnityEngine.Random.Range(0, int.MaxValue);
         }
 
         private void Update()
@@ -76,10 +78,10 @@ namespace UriAlbum.Runtime.Core
             if (loadStarted) return;
 
             // If seed is not synced yet, wait for it\
-            if (_seed == 0) return;
+            if (seed == 0) return;
 
             // Seeding for instance deterministic shuffle
-            UnityEngine.Random.InitState(_seed);
+            UnityEngine.Random.InitState(seed);
 
             // Start load
             loadStarted = true;
