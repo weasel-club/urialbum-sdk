@@ -6,6 +6,7 @@ using VRC.SDK3.Data;
 using VRC.SDK3.StringLoading;
 using VRC.SDKBase;
 using VRC.Udon.Common.Interfaces;
+using Random = UnityEngine.Random;
 
 namespace UriAlbum.Runtime.Core
 {
@@ -69,7 +70,7 @@ namespace UriAlbum.Runtime.Core
 
         private void Start()
         {
-            if (Networking.IsMaster) seed = UnityEngine.Random.Range(0, int.MaxValue);
+            if (Networking.IsMaster) seed = Random.Range(0, int.MaxValue);
         }
 
         private void Update()
@@ -77,11 +78,8 @@ namespace UriAlbum.Runtime.Core
             if (!IsSet) return;
             if (loadStarted) return;
 
-            // If seed is not synced yet, wait for it\
-            if (seed == 0) return;
-
-            // Seeding for instance deterministic shuffle
-            UnityEngine.Random.InitState(seed);
+            // If seed is not synced yet, wait for it
+            if (seed == -1) return;
 
             // Start load
             loadStarted = true;
@@ -216,11 +214,14 @@ namespace UriAlbum.Runtime.Core
             return -1;
         }
 
-        private static void ShuffleDataList(DataList list)
+        private void ShuffleDataList(DataList list)
         {
+            // Seeding for instance deterministic shuffle
+            Random.InitState(seed);
+            
             for (var i = list.Count - 1; i > 0; i--)
             {
-                var j = UnityEngine.Random.Range(0, i + 1);
+                var j = Random.Range(0, i + 1);
                 var temp = list[i];
                 list[i] = list[j];
                 list[j] = temp;
