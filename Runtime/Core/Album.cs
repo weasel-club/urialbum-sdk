@@ -88,7 +88,7 @@ namespace UriAlbum.Runtime.Core
 
         private void LoadMetadata()
         {
-            VRCStringDownloader.LoadUrl(_metadataUrl, (IUdonEventReceiver) this);
+            VRCStringDownloader.LoadUrl(_metadataUrl, (IUdonEventReceiver)this);
         }
 
         private void OnMetadataStringLoaded(string text)
@@ -129,7 +129,7 @@ namespace UriAlbum.Runtime.Core
             foreach (var atlas in _atlases) imageCount += atlas.Images.Length;
 
             var n = Mathf.CeilToInt(Mathf.Sqrt(_atlases.Length));
-            var size = (float) _metadata.PotatoSize / n;
+            var size = (float)_metadata.PotatoSize / n;
             var scale = 1f / n;
 
             potatoMetadata.Images = new Metadata.Image[imageCount];
@@ -140,7 +140,7 @@ namespace UriAlbum.Runtime.Core
                 var atlas = _atlases[atlasIndex];
 
                 var sx = atlasIndex % n * size;
-                var sy = (int) ((float) atlasIndex / n) * size;
+                var sy = (int)((float)atlasIndex / n) * size;
 
                 foreach (var image in atlas.Images)
                 {
@@ -149,10 +149,10 @@ namespace UriAlbum.Runtime.Core
                     potatoImageMetadata.ID = image.Metadata.ID;
                     potatoImageMetadata.Tag = image.Metadata.Tag;
                     potatoImageMetadata.CreatedAt = image.Metadata.CreatedAt;
-                    potatoImageMetadata.X = (int) (image.Metadata.X * scale + sx);
-                    potatoImageMetadata.Y = (int) (image.Metadata.Y * scale + sy);
-                    potatoImageMetadata.Width = (int) (image.Metadata.Width * scale);
-                    potatoImageMetadata.Height = (int) (image.Metadata.Height * scale);
+                    potatoImageMetadata.X = (int)(image.Metadata.X * scale + sx);
+                    potatoImageMetadata.Y = (int)(image.Metadata.Y * scale + sy);
+                    potatoImageMetadata.Width = (int)(image.Metadata.Width * scale);
+                    potatoImageMetadata.Height = (int)(image.Metadata.Height * scale);
                     potatoMetadata.Images[imageIndex] = potatoImageMetadata;
                     imageIndex++;
                 }
@@ -197,7 +197,7 @@ namespace UriAlbum.Runtime.Core
             {
                 if (linkedSubscriptions.TryGetValue(image.Metadata.ID, out var subscriptionToken))
                 {
-                    var subscription = (Subscription) subscriptionToken.Reference;
+                    var subscription = (Subscription)subscriptionToken.Reference;
                     subscription.Notify(image);
                 }
             }
@@ -207,7 +207,7 @@ namespace UriAlbum.Runtime.Core
         {
             for (var i = 0; i < images.Count; i++)
             {
-                var image = (Image) images[i].Reference;
+                var image = (Image)images[i].Reference;
                 if (image.Metadata.Tag == tag) return i;
             }
 
@@ -218,7 +218,7 @@ namespace UriAlbum.Runtime.Core
         {
             // Seeding for instance deterministic shuffle
             Random.InitState(seed);
-            
+
             for (var i = list.Count - 1; i > 0; i--)
             {
                 var j = Random.Range(0, i + 1);
@@ -228,16 +228,27 @@ namespace UriAlbum.Runtime.Core
             }
         }
 
+        private bool IsTagged(Image image)
+        {
+            return image.Metadata.Tag != null && image.Metadata.Tag.Length > 0;
+        }
+
         private void LinkSubscriptions()
         {
-            var images = new DataList();
+            // 태그된 이미지와 태그되지 않은 이미지를 분리
+            var taggedImages = new DataList();
+            var untaggedImages = new DataList();
+
             foreach (var atlas in _atlases)
-            foreach (var image in atlas.Images)
-                images.Add(image);
+                foreach (var image in atlas.Images)
+                    if (IsTagged(image)) taggedImages.Add(image);
+                    else untaggedImages.Add(image);
 
-            ShuffleDataList(images);
+            // 각각 셔플
+            ShuffleDataList(taggedImages);
+            ShuffleDataList(untaggedImages);
 
-            // Link tagged images
+            // 태그된 이미지 연결
             var tags = tagSubscriptions.GetKeys();
             for (var i = 0; i < tags.Count; i++)
             {
@@ -246,25 +257,26 @@ namespace UriAlbum.Runtime.Core
 
                 for (var j = 0; j < subscriptions.Count; j++)
                 {
-                    var subscription = (Subscription) subscriptions[j].Reference;
+                    var subscription = (Subscription)subscriptions[j].Reference;
 
-                    // Find image with tag
-                    var imageIndex = FindImageWithTag(images, tag);
+                    // 해당 태그를 가진 이미지 찾기
+                    var imageIndex = FindImageWithTag(taggedImages, tag);
                     if (imageIndex == -1) break;
-                    var image = (Image) images[imageIndex].Reference;
-                    images.RemoveAt(imageIndex);
 
+                    var image = (Image)taggedImages[imageIndex].Reference;
+                    taggedImages.RemoveAt(imageIndex);
                     LinkImageSubscription(subscription, image);
                 }
             }
 
-            // Link other images
-            while (images.Count > 0 && nonTagSubscriptions.Count > 0)
+            // 태그되지 않은 이미지 연결
+            while (untaggedImages.Count > 0 && nonTagSubscriptions.Count > 0)
             {
-                var image = (Image) images[0].Reference;
-                var subscription = (Subscription) nonTagSubscriptions[0].Reference;
+                var image = (Image)untaggedImages[0].Reference;
+                var subscription = (Subscription)nonTagSubscriptions[0].Reference;
+
                 LinkImageSubscription(subscription, image);
-                images.RemoveAt(0);
+                untaggedImages.RemoveAt(0);
                 nonTagSubscriptions.RemoveAt(0);
             }
         }
