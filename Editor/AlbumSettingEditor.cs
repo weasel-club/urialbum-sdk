@@ -112,7 +112,7 @@ namespace URIAlbum.Editor
                 album.atlasUrls = new VRCUrl[EditorUtil.PreparedAtlasUrls];
                 for (var j = 0; j < album.atlasUrls.Length; j++)
                 {
-                    album.atlasUrls[j] = new VRCUrl($"{EditorUtil.APIUrl}/groups/{groupInfo.id}/albums/{albumInfo.id}/atlases/{i}?key={setting.key}");
+                    album.atlasUrls[j] = new VRCUrl($"{EditorUtil.APIUrl}/groups/{groupInfo.id}/albums/{albumInfo.id}/atlases/{j}?key={setting.key}");
                 }
                 album.potatoUrl = new VRCUrl($"{EditorUtil.APIUrl}/groups/{groupInfo.id}/albums/{albumInfo.id}/potato?key={setting.key}");
                 album.prefabs = prefabs;
