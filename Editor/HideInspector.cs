@@ -1,53 +1,57 @@
 #if UNITY_EDITOR
 
 using UnityEditor;
-using UriAlbum.Runtime.Core.Metadata;
 
-namespace UriAlbum.Editor
+namespace URIAlbum.Editor
 {
     public class HideInspector : UnityEditor.Editor
     {
         public override void OnInspectorGUI()
         {
-            EditorGUILayout.HelpBox("This component is managed by the UriAlbum system. Do not modify.",
+            EditorGUILayout.HelpBox("This component is managed by the URIAlbum setting. Do not modify.",
                 MessageType.Info);
         }
     }
 
-    [CustomEditor(typeof(Atlas))]
-    public class MetadataAtlas : HideInspector
-    {
-    }
+    [CustomEditor(typeof(Runtime.Core.Album))]
+    public class AlbumEditor : HideInspector { }
 
-    [CustomEditor(typeof(Image))]
-    public class MetadataImage : HideInspector
-    {
-    }
-
-    [CustomEditor(typeof(Album))]
-    public class MetadataAlbum : HideInspector
-    {
-    }
 
     [CustomEditor(typeof(Runtime.Core.Atlas))]
-    public class CoreAtlas : HideInspector
+    public class CoreAtlasEditor : HideInspector
     {
     }
 
     [CustomEditor(typeof(Runtime.Core.Image))]
-    public class CoreImage : HideInspector
+    public class CoreImageEditor : HideInspector
     {
     }
 
     [CustomEditor(typeof(Runtime.Core.Subscription))]
-    public class CoreImageSubscription : HideInspector
+    public class CoreSubscriptionEditor : HideInspector
     {
     }
 
     [CustomEditor(typeof(Runtime.Core.Prefabs))]
-    public class CorePrefabs : HideInspector
+    public class CorePrefabsEditor : HideInspector
     {
     }
+
+    [CustomEditor(typeof(Runtime.Core.Metadata.Atlas))]
+    public class MetadataAtlasEditor : HideInspector
+    {
+    }
+
+    [CustomEditor(typeof(Runtime.Core.Metadata.Image))]
+    public class MetadataImageEditor : HideInspector
+    {
+    }
+
+    [CustomEditor(typeof(Runtime.Core.Metadata.Album))]
+    public class MetadataAlbumEditor : HideInspector
+    {
+    }
+
 }
 
 #endif

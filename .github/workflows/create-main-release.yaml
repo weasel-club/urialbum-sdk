@@ -27,7 +27,7 @@ jobs:
         with:
           files: ./output/release.zip
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          name: UriAlbumSDK-${{ github.ref_name }}.zip
+          name: URIAlbumSDK-${{ github.ref_name }}.zip
 
       - name: Trigger packages workflow
         uses: convictional/trigger-workflow-and-wait@v1.6.1

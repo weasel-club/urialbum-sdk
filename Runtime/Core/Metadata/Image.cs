@@ -3,7 +3,7 @@ using UdonSharp;
 using UnityEngine;
 using VRC.SDK3.Data;
 
-namespace UriAlbum.Runtime.Core.Metadata
+namespace URIAlbum.Runtime.Core.Metadata
 {
     [AddComponentMenu("")]
     public class Image : UdonSharpBehaviour
@@ -24,10 +24,10 @@ namespace UriAlbum.Runtime.Core.Metadata
             Tag = data["tag"].IsNull
                 ? null
                 : data["tag"].String;
-            X = (int) data["x"].Double;
-            Y = (int) data["y"].Double;
-            Width = (int) data["width"].Double;
-            Height = (int) data["height"].Double;
+            X = (int)data["x"].Double;
+            Y = (int)data["y"].Double;
+            Width = (int)data["width"].Double;
+            Height = (int)data["height"].Double;
             Rotated = data["rotated"].Boolean;
         }
     }

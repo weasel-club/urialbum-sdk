@@ -5,7 +5,7 @@ using VRC.SDK3.Image;
 using VRC.SDKBase;
 using VRC.Udon.Common.Interfaces;
 
-namespace UriAlbum.Runtime.Core
+namespace URIAlbum.Runtime.Core
 {
     [AddComponentMenu("")]
     public class Atlas : UdonSharpBehaviour
@@ -27,7 +27,7 @@ namespace UriAlbum.Runtime.Core
 
         public static Atlas Create(Album album, Metadata.Atlas metadata)
         {
-            var atlasObject = Instantiate(album.Prefabs.Atlas.gameObject, album.transform);
+            var atlasObject = Instantiate(album.prefabs.atlas.gameObject, album.transform);
             var atlas = atlasObject.GetComponent<Atlas>();
             atlas._metadata = metadata;
             atlas._album = album;
@@ -47,10 +47,15 @@ namespace UriAlbum.Runtime.Core
             _album.OnAtlasLoaded(this);
         }
 
+        public override void OnImageLoadError(IVRCImageDownload result)
+        {
+            Debug.LogError($"[URIAlbum] Failed to load atlas image from {result.Url}: {result.Error}");
+        }
+
         public void Load(VRCUrl url)
         {
             _downloader = new VRCImageDownloader();
-            _downloader.DownloadImage(url, null, (IUdonEventReceiver) this);
+            _downloader.DownloadImage(url, null, (IUdonEventReceiver)this);
         }
 
         public void Prioritize()

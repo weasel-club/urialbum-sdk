@@ -2,7 +2,7 @@ using System;
 using UdonSharp;
 using UnityEngine;
 
-namespace UriAlbum.Runtime.Core
+namespace URIAlbum.Runtime.Core
 {
     [AddComponentMenu("")]
     public class Subscription : UdonSharpBehaviour
@@ -18,7 +18,7 @@ namespace UriAlbum.Runtime.Core
 
         public static Subscription Create(Album album, UdonSharpBehaviour target)
         {
-            var subscriptionObject = Instantiate(album.Prefabs.Subscription.gameObject, album.transform);
+            var subscriptionObject = Instantiate(album.prefabs.subscription.gameObject, album.transform);
             subscriptionObject.name = "Subscription";
             var subscription = subscriptionObject.GetComponent<Subscription>();
             subscription._album = album;

@@ -8,36 +8,28 @@ using VRC.SDKBase;
 using VRC.Udon.Common.Interfaces;
 using Random = UnityEngine.Random;
 
-namespace UriAlbum.Runtime.Core
+namespace URIAlbum.Runtime.Core
 {
-    [UdonBehaviourSyncMode(BehaviourSyncMode.Continuous)]
-    [AddComponentMenu("UriAlbum/Album")]
+    [AddComponentMenu("")]
     public class Album : UdonSharpBehaviour
     {
-        // User provided options
-        [SerializeField] private string _groupId;
-        [SerializeField] private string _albumName;
+        // Configured by editor
+        public string groupId;
+        public string groupName;
+        public string albumId;
+        public string albumName;
+        public VRCUrl metadataUrl;
+        public VRCUrl[] atlasUrls;
+        public VRCUrl potatoUrl;
+        public Prefabs prefabs;
 
-        public string GroupId => _groupId;
-        public string AlbumName => _albumName;
-
-        // Compile time serialized values
-        [SerializeField] private bool _isSet;
-        [SerializeField] private VRCUrl _metadataUrl;
-        [SerializeField] private VRCUrl[] _atlasUrls;
-        [SerializeField] private VRCUrl _potatoUrl;
-
-        public bool IsSet => _isSet;
-
-        [SerializeField] private Prefabs _prefabs;
-        public Prefabs Prefabs => _prefabs;
 
         // Runtime
-        private Metadata.Album _metadata;
+        private Metadata.Album metadata;
+        private Atlas potato;
+        private Atlas[] atlases;
+        private Image[] images;
 
-        private Atlas _potato;
-        private Atlas[] _atlases;
-        private Image[] _images;
 
         private readonly DataDictionary tagSubscriptions = new DataDictionary(); // Tag -> DataList<ImageSubscription>
         private readonly DataList nonTagSubscriptions = new DataList();
@@ -75,7 +67,6 @@ namespace UriAlbum.Runtime.Core
 
         private void Update()
         {
-            if (!IsSet) return;
             if (loadStarted) return;
 
             // If seed is not synced yet, wait for it
@@ -88,63 +79,68 @@ namespace UriAlbum.Runtime.Core
 
         private void LoadMetadata()
         {
-            VRCStringDownloader.LoadUrl(_metadataUrl, (IUdonEventReceiver)this);
+            VRCStringDownloader.LoadUrl(metadataUrl, (IUdonEventReceiver)this);
         }
 
         private void OnMetadataStringLoaded(string text)
         {
-            var metadataObject = Instantiate(Prefabs.MetadataAlbum.gameObject, transform);
-            _metadata = metadataObject.GetComponent<Metadata.Album>();
+            var metadataObject = Instantiate(prefabs.metadataAlbum.gameObject, transform);
+            metadata = metadataObject.GetComponent<Metadata.Album>();
             if (VRCJson.TryDeserializeFromJson(text, out var data))
-                _metadata.Apply(this, data);
+                metadata.Apply(this, data);
 
             CreateAtlases();
             CreatePotato();
             LinkSubscriptions();
             InitializeAtlasLoadQueue();
 
-            _potato.Load(_potatoUrl);
+            potato.Load(potatoUrl);
         }
 
         public override void OnStringLoadSuccess(IVRCStringDownload result)
         {
-            if (result.Url.Equals(_metadataUrl)) OnMetadataStringLoaded(result.Result);
+            if (result.Url.Equals(metadataUrl)) OnMetadataStringLoaded(result.Result);
+        }
+
+        public override void OnStringLoadError(IVRCStringDownload result)
+        {
+            Debug.LogError($"[URIAlbum] Failed to load album metadata from {result.Url}: {result.Error}");
         }
 
         private void CreateAtlases()
         {
-            _atlases = new Atlas[_metadata.Atlases.Length];
-            for (var i = 0; i < _metadata.Atlases.Length; i++)
+            atlases = new Atlas[metadata.Atlases.Length];
+            for (var i = 0; i < metadata.Atlases.Length; i++)
             {
-                _atlases[i] = Atlas.Create(this, _metadata.Atlases[i]);
+                atlases[i] = Atlas.Create(this, metadata.Atlases[i]);
             }
         }
 
         private void CreatePotato()
         {
-            var potatoMetadataObject = Instantiate(Prefabs.MetadataAtlas.gameObject, transform);
+            var potatoMetadataObject = Instantiate(prefabs.metadataAtlas.gameObject, transform);
             var potatoMetadata = potatoMetadataObject.GetComponent<Metadata.Atlas>();
 
             var imageCount = 0;
-            foreach (var atlas in _atlases) imageCount += atlas.Images.Length;
+            foreach (var atlas in atlases) imageCount += atlas.Images.Length;
 
-            var n = Mathf.CeilToInt(Mathf.Sqrt(_atlases.Length));
-            var size = (float)_metadata.PotatoSize / n;
+            var n = Mathf.CeilToInt(Mathf.Sqrt(atlases.Length));
+            var size = (float)metadata.PotatoSize / n;
             var scale = 1f / n;
 
             potatoMetadata.Images = new Metadata.Image[imageCount];
 
             var imageIndex = 0;
-            for (var atlasIndex = 0; atlasIndex < _atlases.Length; atlasIndex++)
+            for (var atlasIndex = 0; atlasIndex < atlases.Length; atlasIndex++)
             {
-                var atlas = _atlases[atlasIndex];
+                var atlas = atlases[atlasIndex];
 
                 var sx = atlasIndex % n * size;
                 var sy = (int)((float)atlasIndex / n) * size;
 
                 foreach (var image in atlas.Images)
                 {
-                    var potatoImageMetadataObject = Instantiate(Prefabs.MetadataImage.gameObject, transform);
+                    var potatoImageMetadataObject = Instantiate(prefabs.metadataImage.gameObject, transform);
                     var potatoImageMetadata = potatoImageMetadataObject.GetComponent<Metadata.Image>();
                     potatoImageMetadata.ID = image.Metadata.ID;
                     potatoImageMetadata.Tag = image.Metadata.Tag;
@@ -158,14 +154,14 @@ namespace UriAlbum.Runtime.Core
                 }
             }
 
-            _potato = Atlas.Create(this, potatoMetadata);
+            potato = Atlas.Create(this, potatoMetadata);
         }
 
         private void LoadNextAtlas()
         {
             if (atlasLoadQueue.Count == 0) return;
             var index = atlasLoadQueue[0].Int;
-            _atlases[index].Load(_atlasUrls[index]);
+            atlases[index].Load(atlasUrls[index]);
             atlasLoadQueue.RemoveAt(0);
         }
 
@@ -175,7 +171,7 @@ namespace UriAlbum.Runtime.Core
             if (atlas.Loaded) return;
 
             // Find index of atlas in queue
-            var index = Array.IndexOf(_atlases, atlas);
+            var index = Array.IndexOf(atlases, atlas);
             if (index == -1) return;
 
             // If already first in queue, do nothing
@@ -239,7 +235,7 @@ namespace UriAlbum.Runtime.Core
             var taggedImages = new DataList();
             var untaggedImages = new DataList();
 
-            foreach (var atlas in _atlases)
+            foreach (var atlas in atlases)
                 foreach (var image in atlas.Images)
                     if (IsTagged(image)) taggedImages.Add(image);
                     else untaggedImages.Add(image);
@@ -303,24 +299,12 @@ namespace UriAlbum.Runtime.Core
 
         private void InitializeAtlasLoadQueue()
         {
-            for (var i = 0; i < _atlases.Length; i++)
+            for (var i = 0; i < atlases.Length; i++)
             {
-                var atlas = _atlases[i];
+                var atlas = atlases[i];
                 if (IsAtlasSubscribed(atlas)) atlasLoadQueue.Add(i);
             }
         }
 
-        public void ResetPrepared()
-        {
-            var children = new Transform[transform.childCount];
-            for (var i = 0; i < transform.childCount; i++) children[i] = transform.GetChild(i);
-            foreach (var child in children) DestroyImmediate(child.gameObject);
-            _isSet = false;
-        }
-
-        private void Reset()
-        {
-            ResetPrepared();
-        }
     }
 }

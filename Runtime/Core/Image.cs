@@ -1,7 +1,7 @@
 ﻿using UdonSharp;
 using UnityEngine;
 
-namespace UriAlbum.Runtime.Core
+namespace URIAlbum.Runtime.Core
 {
     [AddComponentMenu("")]
     public class Image : UdonSharpBehaviour
@@ -15,7 +15,7 @@ namespace UriAlbum.Runtime.Core
 
         public static Image Create(Album album, Atlas atlas, Metadata.Image metadata)
         {
-            var imageObject = Instantiate(album.Prefabs.Image.gameObject, album.transform);
+            var imageObject = Instantiate(album.prefabs.image.gameObject, album.transform);
             var image = imageObject.GetComponent<Image>();
             image._album = album;
             image._metadata = metadata;

@@ -20,7 +20,7 @@ MonoBehaviour:
   compiledVersion: 2
   behaviourSyncMode: 0
   hasInteractEvent: 0
-  scriptID: 6987718354057188027
+  scriptID: -795113462748758703
   serializationData:
     SerializedFormat: 2
     SerializedBytes: 
@@ -175,7 +175,7 @@ MonoBehaviour:
       Data: 10|System.RuntimeType, mscorlib
     - Name: 
       Entry: 1
-      Data: UriAlbum.Runtime.Core.Metadata.Atlas, UriAlbum.Runtime
+      Data: URIAlbum.Runtime.Core.Metadata.Atlas, URIAlbum.Runtime
     - Name: 
       Entry: 8
       Data: 
@@ -235,7 +235,7 @@ MonoBehaviour:
       Data: 14|System.RuntimeType, mscorlib
     - Name: 
       Entry: 1
-      Data: UriAlbum.Runtime.Core.Album, UriAlbum.Runtime
+      Data: URIAlbum.Runtime.Core.Album, URIAlbum.Runtime
     - Name: 
       Entry: 8
       Data: 
@@ -289,7 +289,7 @@ MonoBehaviour:
       Data: 17|System.RuntimeType, mscorlib
     - Name: 
       Entry: 1
-      Data: UriAlbum.Runtime.Core.Image[], UriAlbum.Runtime
+      Data: URIAlbum.Runtime.Core.Image[], URIAlbum.Runtime
     - Name: 
       Entry: 8
       Data: 

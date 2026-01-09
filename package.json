@@ -1,9 +1,9 @@
 {
   "name": "com.urialbum.sdk",
-  "displayName": "UriAlbum SDK",
+  "displayName": "URIAlbum SDK",
   "version": "0.0.0",
   "unity": "2022.3",
-  "description": "UriAlbum SDK",
+  "description": "URIAlbum SDK",
   "author": {
     "name": "WeaselClub",
     "url": "https://github.com/weasel-club"

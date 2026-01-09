@@ -14,7 +14,7 @@ jobs:
         run: |
           VERSION=$(echo "${{ github.ref_name }}" | sed 's/-beta$//')
           echo "Updating package.json version to $VERSION"
-          jq --arg version "$VERSION" --arg display "UriAlbum SDK Beta" '
+          jq --arg version "$VERSION" --arg display "URIAlbum SDK Beta" '
             .version = $version | 
             .name = "com.urialbum.sdk.beta" |
             .displayName = $display |
@@ -32,7 +32,7 @@ jobs:
         with:
           files: ./output/release.zip
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          name: UriAlbumSDK-${{ github.ref_name }}.zip
+          name: URIAlbumSDK-${{ github.ref_name }}.zip
           repository: weasel-club/urialbum-sdk-beta
 
       - name: Trigger packages workflow

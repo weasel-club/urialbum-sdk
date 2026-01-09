@@ -3,7 +3,7 @@ using UdonSharp;
 using UnityEngine;
 using VRC.SDK3.Data;
 
-namespace UriAlbum.Runtime.Core.Metadata
+namespace URIAlbum.Runtime.Core.Metadata
 {
     [AddComponentMenu("")]
     public class Album : UdonSharpBehaviour
@@ -15,13 +15,13 @@ namespace UriAlbum.Runtime.Core.Metadata
         {
             var dictionary = data.DataDictionary;
 
-            PotatoSize = (int) dictionary["potatoSize"].Double;
+            PotatoSize = (int)dictionary["potatoSize"].Double;
             var atlases = dictionary["atlases"].DataList;
             Atlases = new Atlas[atlases.Count];
             for (var i = 0; i < atlases.Count; i++)
             {
                 var atlasToken = atlases[i].DataDictionary;
-                var atlasObject = Instantiate(album.Prefabs.MetadataAtlas.gameObject, album.transform);
+                var atlasObject = Instantiate(album.prefabs.metadataAtlas.gameObject, album.transform);
                 var atlas = atlasObject.GetComponent<Atlas>();
                 atlas.Apply(album, atlasToken);
                 Atlases[i] = atlas;
