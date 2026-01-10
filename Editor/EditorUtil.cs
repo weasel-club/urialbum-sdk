@@ -151,7 +151,7 @@ namespace URIAlbum.Editor
 
         private static void UpdateImageDisplayOrders()
         {
-            var imageDisplays = Object.FindObjectsOfType<ImageDisplay>();
+            var imageDisplays = Object.FindObjectsOfType<ImageDisplay>(true);
             var sortedDisplays = SortByHierarchyOrder(imageDisplays);
             for (var i = 0; i < sortedDisplays.Length; i++)
             {

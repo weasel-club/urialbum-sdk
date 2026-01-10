@@ -24,8 +24,26 @@ namespace URIAlbum.Editor
                 return;
             }
 
+            var imageDisplay = (ImageDisplay)target;
+
+            EditorGUI.BeginDisabledGroup(loading);
+            EditorGUILayout.BeginVertical(EditorUtil.BoxStyle);
+            EditorGUILayout.LabelField(EditorUtil.Tr("ImageDisplaySetting"), EditorUtil.HeaderStyle);
+            EditorGUILayout.Space(8);
+
             DrawAlbumSelection();
 
+            EditorGUILayout.Space(6);
+            using (new EditorGUI.DisabledScope(imageDisplay.setting == null))
+            {
+                var refreshContent = new GUIContent(EditorUtil.Tr("RefreshAlbumSetting"), EditorGUIUtility.IconContent("Refresh").image);
+                if (GUILayout.Button(refreshContent, GUILayout.Height(24)))
+                {
+                    RefreshAlbumSetting();
+                }
+            }
+            EditorGUILayout.EndVertical();
+            EditorGUI.EndDisabledGroup();
             serializedObject.ApplyModifiedProperties();
 
             EditorUtil.DrawFooter();
@@ -48,13 +66,9 @@ namespace URIAlbum.Editor
         private void DrawAlbumSelection()
         {
             var imageDisplay = (ImageDisplay)target;
+            var settings = FindObjectsOfType<AlbumSetting>(true);
+            var albums = FindObjectsOfType<Album>(true);
 
-            EditorGUI.BeginDisabledGroup(loading);
-            var settings = FindObjectsOfType<AlbumSetting>();
-            var albums = FindObjectsOfType<Album>();
-            EditorGUILayout.BeginVertical(EditorUtil.BoxStyle);
-            EditorGUILayout.LabelField(EditorUtil.Tr("ImageDisplaySetting"), EditorUtil.HeaderStyle);
-            EditorGUILayout.Space(8);
             if (albums.Length == 0)
             {
                 EditorGUILayout.HelpBox(EditorUtil.Tr("NoAlbumFound"), MessageType.Warning);
@@ -83,21 +97,23 @@ namespace URIAlbum.Editor
                         imageDisplay.setting = nextSetting;
                         imageDisplay.albumId = album.albumId;
                         EditorUtility.SetDirty(imageDisplay);
+                        AlbumSettingEditor.UpdateUsedAlbums(imageDisplay.setting);
                     }
                 }
             }
             DrawTagSelection();
-            EditorGUILayout.Space(6);
-            using (new EditorGUI.DisabledScope(imageDisplay.setting == null))
-            {
-                var refreshContent = new GUIContent(EditorUtil.Tr("RefreshAlbumSetting"), EditorGUIUtility.IconContent("Refresh").image);
-                if (GUILayout.Button(refreshContent, GUILayout.Height(24)))
-                {
-                    RefreshAlbumSetting();
-                }
-            }
-            EditorGUILayout.EndVertical();
-            EditorGUI.EndDisabledGroup();
+        }
+
+        private void OnEnable()
+        {
+            var imageDisplay = (ImageDisplay)target;
+            AlbumSettingEditor.UpdateUsedAlbums(imageDisplay.setting);
+        }
+
+        private void OnDisable()
+        {
+            var imageDisplay = (ImageDisplay)target;
+            AlbumSettingEditor.UpdateUsedAlbums(imageDisplay.setting);
         }
 
         private void DrawTagSelection()
@@ -157,6 +173,7 @@ namespace URIAlbum.Editor
                     imageDisplay.tag = tagOptions[selectedIndex - 2];
                 }
                 EditorUtility.SetDirty(imageDisplay);
+                AlbumSettingEditor.UpdateUsedAlbums(imageDisplay.setting);
             }
         }
     }

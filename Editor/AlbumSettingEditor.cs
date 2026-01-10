@@ -122,6 +122,7 @@ namespace URIAlbum.Editor
             setting.albums = albums;
             EditorUtility.SetDirty(setting);
             EditorSceneManager.MarkSceneDirty(setting.gameObject.scene);
+            UpdateUsedAlbums(setting);
             return true;
         }
 
@@ -141,6 +142,23 @@ namespace URIAlbum.Editor
             finally
             {
                 loading = false;
+            }
+        }
+
+        public static void UpdateUsedAlbums(AlbumSetting setting)
+        {
+            var displays = GameObject.FindObjectsOfType<URIAlbum.Runtime.Display.ImageDisplay>(true);
+            foreach (var album in setting.albums)
+            {
+                album.gameObject.SetActive(false);
+            }
+
+            foreach (var display in displays)
+            {
+                if (display.setting != setting) continue;
+                var album = setting.albums.FirstOrDefault(a => a.albumId == display.albumId);
+                if (album == null) continue;
+                album.gameObject.SetActive(true);
             }
         }
 
